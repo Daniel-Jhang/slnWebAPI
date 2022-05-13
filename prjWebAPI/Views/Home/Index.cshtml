@@ -1,0 +1,200 @@
+﻿
+@{
+    ViewBag.Title = "呼叫WebAPI進行非同步新增、修改、刪除";
+}
+
+<link href="~/Content/toastr.css" rel="stylesheet" />
+
+<script src="~/Scripts/toastr.js"></script>
+<script>
+    $(document).ready(function () {
+        let apiUrl = "http://localhost:52704/api/Customer";
+
+        $("#btnCreate").on("click", createCustomer);
+        $("#btnEdit").on("click", editCustomer);
+        $("#btnDelete").on("click", deleteCustomer);
+
+        LoadData();
+
+        function LoadData() {
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                success: function (data) {
+                    $("#tableShow").empty();
+                    for (var i = 0; i < data.length; i++) {
+                        $("#tableShow").append(
+                            "<tr>" +
+                            "<td>" + data[i].fId + "</td>" +
+                            "<td>" + data[i].fName + "</td>" +
+                            "<td>" + data[i].fPhone + "</td>" +
+                            "<td>" + data[i].fEmail + "</td>" +
+                            "<td>" + data[i].fAddress + "</td>" +
+                            "<td><input type='button' class='btn btn-info' value='選取' id='btnSelect" + i + "' /></td>" +
+                            "</tr>"
+                        );
+                        $("#btnSelect" + i).on("click", { fId: data[i].fId }, selectCustomer);
+                    }
+                    $("#fId").val("");
+                    $("#fName").val("");
+                    $("#fPhone").val("");
+                    $("#fEmail").val("");
+                    $("#fAddress").val("");
+                }
+            });
+        }
+
+        // 選取指定Customer
+        function selectCustomer(event) {
+            var fId = event.data.fId;
+            console.log(fId);
+            $.ajax({
+                url: apiUrl + "?id=" + encodeURI(fId),
+                type: 'GET',
+                success: function (data) {
+                    $("#fId").val(data.fId);
+                    $("#fName").val(data.fName);
+                    $("#fPhone").val(data.fPhone);
+                    $("#fEmail").val(data.fEmail);
+                    $("#fAddress").val(data.fAddress);
+                }
+            });
+        }
+
+        // 新增Customer
+        function createCustomer() {
+            var response = confirm("確定要新增嗎?");
+            if (response == true) {
+                var customer = {
+                    /*fId: ${$("#fId").val()},*/
+                    fName: $("#fName").val(),
+                    fPhone: $("#fPhone").val(),
+                    fEmail: $("#fEmail").val(),
+                    fAddress: $("#fAddress").val()
+                };
+                console.log(customer);
+
+                $.ajax({
+                    url: apiUrl,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(customer),
+                    success: function (result) {
+                        if (result != 0) {
+                            // alert("新增成功");
+                            toastr.success("資料新增成功", "系統提示");
+                            LoadData();
+                        } else {
+                            // alert("新增失敗");
+                            toastr.error("資料新增失敗", "系統提示");
+                        }
+                    }
+                });
+            }
+        }
+
+        // 修改Customer
+        function editCustomer() {
+            var response = confirm("確定要修改嗎?");
+            if (response == true) {
+                var customer = {
+                    fId: $("#fId").val(),
+                    fName: $("#fName").val(),
+                    fPhone: $("#fPhone").val(),
+                    fEmail: $("#fEmail").val(),
+                    fAddress: $("#fAddress").val()
+                };
+                console.log(customer);
+
+                $.ajax({
+                    url: apiUrl,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(customer),
+                    success: function (result) {
+                        if (result != 0) {
+                            // alert("修改成功");
+                            toastr.success("資料修改完成", "系統提示");
+                            LoadData();
+                        } else {
+                            // alert("修改失敗");
+                            toastr.error("資料修改失敗", "系統提示")
+                        }
+                    }
+                });
+            }
+        }
+
+        // 刪除Customer
+        function deleteCustomer() {
+            var response = confirm("確定要刪除嗎?");
+            if (response == true) {
+                var fId = $("#fId").val();
+                console.log(fId);
+                $.ajax({
+                    url: apiUrl + "?id=" + encodeURI(fId),
+                    type: 'DELETE',
+                    success: function (result) {
+                        if (result != 0) {
+                            // alert("刪除成功");
+                            toastr.info("資料已刪除", "系統提示");
+                            LoadData();
+                        } else {
+                            // alert("刪除失敗");
+                            toastr.error("資料刪除失敗", "系統提示");
+                        }
+                    }
+                });
+            }
+        }
+    });
+</script>
+
+<h2>呼叫WebAPI進行非同步新增、修改、刪除</h2>
+
+<div class="panel panel-primary">
+    <div class="panel-heading">客戶管理</div>
+    <div class="panel-body">
+        <div class="form-group">
+            <label>編號</label>
+            <input type="text" class="form-control" name="fId" id="fId" value="" readonly />
+        </div>
+
+        <div class="form-group">
+            <label for="fName">姓名</label>
+            <input type="text" class="form-control" name="fName" id="fName" value="" required />
+        </div>
+
+        <div class="form-group">
+            <label for="fPhone">電話</label>
+            <input type="text" class="form-control" name="fPhone" id="fPhone" value="" required />
+        </div>
+
+        <div class="form-group">
+            <label for="fEmail">信箱</label>
+            <input type="text" class="form-control" name="fEmail" id="fEmail" value="" required />
+        </div>
+
+        <div class="form-group">
+            <label for="fAddress">地址</label>
+            <input type="text" class="form-control" name="fAddress" id="fAddress" value="" required />
+        </div>
+
+        <input type="button" class="btn btn-primary" name="" value="新增" id="btnCreate" />
+        <input type="button" class="btn btn-success" name="" value="修改" id="btnEdit" />
+        <input type="button" class="btn btn-danger" name="" value="刪除" id="btnDelete" />
+    </div>
+</div>
+
+<table class="table">
+    <tr>
+        <th>編號</th>
+        <th>姓名</th>
+        <th>電話</th>
+        <th>信箱</th>
+        <th>地址</th>
+    </tr>
+    <tbody id="tableShow">
+    </tbody>
+</table>
+
